@@ -15,8 +15,7 @@ const robotoMono = Roboto_Mono({
 
 export const metadata = {
   title: "IPO Matchmaker - Smart Partnership Platform",
-  description: "Connect with investors for IPO opportunities through our intelligent matchmaking platform",
-    generator: 'v0.app'
+  description: "Connect with investors for IPO opportunities through our intelligent matchmaking platform"
 }
 
 export default function RootLayout({
