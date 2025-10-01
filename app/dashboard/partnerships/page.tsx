@@ -1,3 +1,4 @@
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { PartnershipHub } from "@/components/partnerships/partnership-hub"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
@@ -5,7 +6,7 @@ import Link from "next/link"
 
 export default function PartnershipsPage() {
   return (
-    <div className="container mx-auto p-6">
+    <DashboardLayout>
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <Link href="/dashboard">
@@ -21,6 +22,6 @@ export default function PartnershipsPage() {
         </p>
       </div>
       <PartnershipHub />
-    </div>
+    </DashboardLayout>
   )
 }

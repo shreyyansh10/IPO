@@ -1,8 +1,9 @@
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { TrustDashboard } from "@/components/trust/trust-dashboard"
 
 export default function TrustPage() {
   return (
-    <div className="container mx-auto p-6">
+    <DashboardLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Trust & Transparency</h1>
         <p className="text-muted-foreground">
@@ -10,6 +11,6 @@ export default function TrustPage() {
         </p>
       </div>
       <TrustDashboard />
-    </div>
+    </DashboardLayout>
   )
 }

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
-import { Calendar, TrendingUp, Brain, ExternalLink, Bookmark, BookmarkCheck, Target } from "lucide-react"
+import { Calendar, TrendingUp, ExternalLink, Bookmark, BookmarkCheck } from "lucide-react"
 import { useState } from "react"
 
 interface IPO {
@@ -23,11 +23,7 @@ interface IPO {
   lotSize: number
   minInvestment: string
   marketCap: string
-  aiPrediction: {
-    openingPrice: string
-    confidence: number
-    allotmentChance: number
-  }
+  // Removed AI prediction block per requirement
   description: string
   logo: string
   isBookmarked: boolean
@@ -104,11 +100,11 @@ export function IPOListView({ ipos }: IPOListViewProps) {
                     <span>{ipo.marketCap}</span>
                   </div>
 
-                  <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-1">{ipo.description}</p>
+                  {/* Minimal: remove long description */}
                 </div>
               </div>
 
-              {/* Key metrics */}
+              {/* Key metrics (minimal, unified) */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-shrink-0">
                 <div className="text-center">
                   <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Price Range</div>
@@ -125,14 +121,12 @@ export function IPOListView({ ipos }: IPOListViewProps) {
                   <div className="font-semibold text-emerald-600">{ipo.gmp}</div>
                 </div>
 
-                <div className="text-center">
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                    {ipo.subscriptionRatio ? "Subscription" : "Allotment Chance"}
+                {ipo.subscriptionRatio && ipo.status === "live" && (
+                  <div className="text-center">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Subscription</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">{ipo.subscriptionRatio}x</div>
                   </div>
-                  <div className="font-semibold text-slate-900 dark:text-white">
-                    {ipo.subscriptionRatio ? `${ipo.subscriptionRatio}x` : `${ipo.aiPrediction.allotmentChance}%`}
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Actions */}
@@ -144,29 +138,11 @@ export function IPOListView({ ipos }: IPOListViewProps) {
                     <Bookmark className="w-4 h-4 text-slate-400 hover:text-blue-600" />
                   )}
                 </Button>
-
-                <Button variant="outline" size="sm">
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Details
-                </Button>
-
-                <Button
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={ipo.status === "closed" || ipo.status === "listed"}
-                >
-                  {ipo.status === "upcoming"
-                    ? "Set Reminder"
-                    : ipo.status === "live"
-                      ? "Apply Now"
-                      : ipo.status === "closed"
-                        ? "Closed"
-                        : "View"}
-                </Button>
+                {/* Minimal: remove extra actions */}
               </div>
             </div>
 
-            {/* Additional info row */}
+              {/* Additional info row (trimmed, unified with card) */}
             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6 text-sm">
@@ -181,22 +157,13 @@ export function IPOListView({ ipos }: IPOListViewProps) {
                     <span>Listing: {formatDate(ipo.listingDate)}</span>
                   </div>
                 </div>
-
-                {/* AI Prediction summary */}
-                <div className="flex items-center gap-4 text-sm">
+                {/* Partnership options only for upcoming/live */}
+                {(ipo.status === "upcoming" || ipo.status === "live") && (
                   <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-purple-600" />
-                    <span className="text-slate-600 dark:text-slate-400">
-                      AI Opening: {ipo.aiPrediction.openingPrice}
-                    </span>
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">Investment Partnership</Button>
+                    <Button variant="outline">PAN Holder Partnership</Button>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-emerald-600" />
-                    <span className="text-slate-600 dark:text-slate-400">
-                      Confidence: {ipo.aiPrediction.confidence}%
-                    </span>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Subscription progress for live IPOs */}
