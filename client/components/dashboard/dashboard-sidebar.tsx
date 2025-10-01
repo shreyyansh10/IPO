@@ -33,10 +33,20 @@ const navigation = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
-export function DashboardSidebar() {
+interface DashboardSidebarProps {
+  onCollapseChange?: (collapsed: boolean) => void
+}
+
+export function DashboardSidebar({ onCollapseChange }: DashboardSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
   const { user, logout } = useAuth()
+
+  const handleCollapse = () => {
+    const newCollapsed = !collapsed
+    setCollapsed(newCollapsed)
+    onCollapseChange?.(newCollapsed)
+  }
 
   return (
     <>
@@ -46,7 +56,7 @@ export function DashboardSidebar() {
       {/* Sidebar */}
       <motion.div
         animate={{ width: collapsed ? 80 : 256 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={{ duration: 0.6, ease: [0.22, 0.61, 0.36, 1] }}
         className="fixed inset-y-0 left-0 z-50 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-lg"
       >
         <div className="flex flex-col h-full">
@@ -60,7 +70,7 @@ export function DashboardSidebar() {
                 <span className="text-lg font-bold text-slate-900 dark:text-white">IPO Matchmaker</span>
               </div>
             )}
-            <Button variant="ghost" size="sm" onClick={() => setCollapsed(!collapsed)} className="p-2">
+            <Button variant="ghost" size="sm" onClick={handleCollapse} className="p-2">
               {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </Button>
           </div>

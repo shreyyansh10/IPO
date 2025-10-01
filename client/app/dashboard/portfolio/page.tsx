@@ -1,3 +1,4 @@
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { PortfolioSummary } from "@/components/dashboard/portfolio-summary"
 import { PortfolioAnalytics } from "@/components/portfolio/portfolio-analytics"
 import { PortfolioHoldings } from "@/components/portfolio/portfolio-holdings"
@@ -8,7 +9,7 @@ import Link from "next/link"
 
 export default function PortfolioPage() {
   return (
-    <div className="container mx-auto p-6">
+    <DashboardLayout>
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
@@ -44,6 +45,6 @@ export default function PortfolioPage() {
           <PortfolioAnalytics />
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

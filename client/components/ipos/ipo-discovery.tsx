@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,13 +9,13 @@ import { Badge } from "@/components/ui/badge"
 import { IPOFilters } from "./ipo-filters"
 import { IPOCard } from "./ipo-card"
 import { IPOListView } from "./ipo-list-view"
-import { Search, Grid, List, Filter, SortAsc } from "lucide-react"
+import { Search, Grid, List, Filter, SortAsc, SortDesc } from "lucide-react"
 
 export function IPODiscovery() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "upcoming">("all")
   const [showFilters, setShowFilters] = useState(false)
-  const [sortBy, setSortBy] = useState("opening-date")
+  const [sortBy, setSortBy] = useState<"open-asc" | "open-desc">("open-desc")
 
   // Mock IPO data
   const ipos = [
@@ -162,11 +162,24 @@ export function IPODiscovery() {
     },
   ]
 
-  const filteredIPOs = ipos.filter(
-    (ipo) =>
-      ipo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ipo.sector.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const filteredIPOs = useMemo(() => {
+    const statusFiltered = ipos.filter((ipo) => ipo.status !== "closed")
+    const result = statusFiltered.filter(
+      (ipo) =>
+        ipo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ipo.sector.toLowerCase().includes(searchQuery.toLowerCase()),
+    ).filter((ipo) => {
+      if (statusFilter === "active") return ipo.status === "live"
+      if (statusFilter === "upcoming") return ipo.status === "upcoming"
+      return ipo.status === "upcoming" || ipo.status === "live"
+    })
+    result.sort((a, b) => {
+      const da = new Date(a.openDate).getTime()
+      const db = new Date(b.openDate).getTime()
+      return sortBy === "open-asc" ? da - db : db - da
+    })
+    return result
+  }, [ipos, searchQuery, sortBy, statusFilter])
 
   const statusCounts = {
     all: ipos.length,
@@ -176,44 +189,64 @@ export function IPODiscovery() {
     listed: ipos.filter((ipo) => ipo.status === "listed").length,
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "live":
+        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+      case "closed":
+        return "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+      case "upcoming":
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
+      default:
+        return "bg-slate-100 text-slate-700 dark:bg-slate-900/20 dark:text-slate-400"
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Discover IPOs</h1>
           <p className="text-slate-600 dark:text-slate-400">
             Find and analyze upcoming IPO opportunities with AI-powered insights
           </p>
         </div>
-
         <div className="flex items-center gap-2">
-          <Button variant={viewMode === "grid" ? "default" : "outline"} size="sm" onClick={() => setViewMode("grid")}>
-            <Grid className="w-4 h-4" />
-          </Button>
-          <Button variant={viewMode === "list" ? "default" : "outline"} size="sm" onClick={() => setViewMode("list")}>
-            <List className="w-4 h-4" />
-          </Button>
+          <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <Button
+              size="sm"
+              variant={statusFilter === "all" ? "default" : "ghost"}
+              className={`${statusFilter === "all" ? "bg-slate-900 text-white" : "text-slate-600"} rounded-none`}
+              onClick={() => setStatusFilter("all")}
+            >
+              All IPOs
+            </Button>
+            <Button
+              size="sm"
+              variant={statusFilter === "active" ? "default" : "ghost"}
+              className={`${statusFilter === "active" ? "bg-slate-900 text-white" : "text-slate-600"} rounded-none`}
+              onClick={() => setStatusFilter("active")}
+            >
+              Active
+            </Button>
+            <Button
+              size="sm"
+              variant={statusFilter === "upcoming" ? "default" : "ghost"}
+              className={`${statusFilter === "upcoming" ? "bg-slate-900 text-white" : "text-slate-600"} rounded-none`}
+              onClick={() => setStatusFilter("upcoming")}
+            >
+              Upcoming
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Status overview */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {Object.entries(statusCounts).map(([status, count]) => (
-          <Card key={status} className="p-4 text-center hover:shadow-md transition-shadow duration-200">
-            <div className="text-2xl font-bold text-slate-900 dark:text-white">{count}</div>
-            <div className="text-sm text-slate-600 dark:text-slate-400 capitalize">
-              {status === "all" ? "Total IPOs" : `${status} IPOs`}
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {/* Search and filters */}
-      <Card className="p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+      {/* Search and sort row (below premium banner, before KPI row) */}
+      <Card className="p-4">
+        <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               placeholder="Search IPOs by name or sector..."
               value={searchQuery}
@@ -221,20 +254,22 @@ export function IPODiscovery() {
               className="pl-10"
             />
           </div>
-
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2">
               <Filter className="w-4 h-4" />
               Filters
             </Button>
-
-            <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-              <SortAsc className="w-4 h-4" />
-              Sort
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() => setSortBy(sortBy === "open-asc" ? "open-desc" : "open-asc")}
+              title={sortBy === "open-asc" ? "Sort by opening date: newest" : "Sort by opening date: oldest"}
+            >
+              {sortBy === "open-asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+              {sortBy === "open-asc" ? "Open Date ASC" : "Open Date DESC"}
             </Button>
           </div>
         </div>
-
         {showFilters && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -248,35 +283,24 @@ export function IPODiscovery() {
         )}
       </Card>
 
-      {/* Results */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-slate-600 dark:text-slate-400">
-          Showing {filteredIPOs.length} of {ipos.length} IPOs
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs">
-            AI Predictions Enabled
-          </Badge>
-        </div>
-      </div>
+      {/* Removed KPI numbers for minimal design */}
 
-      {/* IPO Grid/List */}
-      {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredIPOs.map((ipo, index) => (
-            <motion.div
-              key={ipo.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <IPOCard ipo={ipo} />
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        <IPOListView ipos={filteredIPOs} />
-      )}
+      {/* Results */}
+      <div className="text-sm text-slate-600 dark:text-slate-400">Showing {filteredIPOs.length} IPOs</div>
+
+      {/* IPO Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredIPOs.map((ipo, index) => (
+          <motion.div
+            key={ipo.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <IPOCard ipo={ipo} />
+          </motion.div>
+        ))}
+      </div>
     </div>
   )
 }

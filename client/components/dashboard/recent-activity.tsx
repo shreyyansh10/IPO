@@ -124,10 +124,11 @@ export function RecentActivity() {
                           <AvatarImage src={activity.user.avatar || "/placeholder.svg"} alt={activity.user.name} />
                           <AvatarFallback className="text-xs">
                             {activity.user.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
+                              ?.split(" ")
+                              .map((n) => n?.[0] || "")
+                              .join("") || "??"}
                           </AvatarFallback>
+
                         </Avatar>
                         <span className="text-xs text-slate-500 dark:text-slate-400">{activity.user.name}</span>
                       </div>

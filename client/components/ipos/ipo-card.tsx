@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, Brain, ExternalLink, Bookmark, BookmarkCheck } from "lucide-react"
+import { Calendar, Bookmark, BookmarkCheck } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface IPO {
   id: number
@@ -23,11 +24,7 @@ interface IPO {
   lotSize: number
   minInvestment: string
   marketCap: string
-  aiPrediction: {
-    openingPrice: string
-    confidence: number
-    allotmentChance: number
-  }
+  // Removed AI prediction block per requirement
   description: string
   logo: string
   isBookmarked: boolean
@@ -120,45 +117,63 @@ export function IPOCard({ ipo }: IPOCardProps) {
             </div>
           </div>
 
-          {/* Subscription ratio for live/closed IPOs */}
-          {ipo.subscriptionRatio && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600 dark:text-slate-400">Subscription</span>
-                <span className="font-semibold text-slate-900 dark:text-white">{ipo.subscriptionRatio}x</span>
-              </div>
+          {/* Subscription (minimal) */}
+          {ipo.subscriptionRatio && ipo.status === "live" && (
+            <div>
               <Progress value={Math.min(ipo.subscriptionRatio * 20, 100)} className="h-2" />
             </div>
           )}
 
-          {/* AI Predictions */}
-          <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-              <Brain className="w-3 h-3 text-purple-600" />
-              AI Predictions
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div>
-                <div className="text-slate-500 dark:text-slate-400">Opening Price</div>
-                <div className="font-semibold text-slate-900 dark:text-white">{ipo.aiPrediction.openingPrice}</div>
+          {/* View details with partnerships inside */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white">View Details</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-xl">
+              <DialogHeader>
+                <DialogTitle className="text-slate-900 dark:text-white">{ipo.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="text-slate-500 dark:text-slate-400">Price Range</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">{ipo.priceRange}</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 dark:text-slate-400">Min Investment</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">{ipo.minInvestment}</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 dark:text-slate-400">Lot Size</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">{ipo.lotSize}</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 dark:text-slate-400">GMP</div>
+                    <div className="font-semibold text-emerald-600">{ipo.gmp}</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 dark:text-slate-400">Market Cap</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">{ipo.marketCap}</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                    <Calendar className="w-3 h-3" />
+                    <span>Open: {formatDate(ipo.openDate)}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                    <span>Close: {formatDate(ipo.closeDate)}</span>
+                  </div>
+                </div>
+                {(ipo.status === "upcoming" || ipo.status === "live") && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                    <Button className="bg-slate-900 hover:bg-slate-800 text-white">Investment Partnership</Button>
+                    <Button variant="outline">PAN Holder Partnership</Button>
+                  </div>
+                )}
               </div>
-              <div>
-                <div className="text-slate-500 dark:text-slate-400">Confidence</div>
-                <div className="font-semibold text-emerald-600">{ipo.aiPrediction.confidence}%</div>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Allotment Chance</span>
-                <span className="font-semibold text-slate-900 dark:text-white">
-                  {ipo.aiPrediction.allotmentChance}%
-                </span>
-              </div>
-              <Progress value={ipo.aiPrediction.allotmentChance} className="h-1.5" />
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
 
           {/* GMP and Market Cap */}
           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -172,41 +187,20 @@ export function IPOCard({ ipo }: IPOCardProps) {
             </div>
           </div>
 
-          {/* Listed IPO performance */}
+          {/* Listed IPO performance (minimal) */}
           {ipo.status === "listed" && ipo.listingGain && (
             <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600 dark:text-slate-400">Listing Performance</span>
                 <span className="font-semibold text-emerald-600">{ipo.listingGain}</span>
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Listed at {ipo.listingPrice} • Current: {ipo.currentPrice}
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Listed {ipo.listingPrice} • Now {ipo.currentPrice}
+                </span>
               </div>
             </div>
           )}
 
-          {/* Description */}
-          <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{ipo.description}</p>
-
-          {/* Action buttons */}
-          <div className="flex gap-2 pt-2">
-            <Button
-              size="sm"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={ipo.status === "closed" || ipo.status === "listed"}
-            >
-              {ipo.status === "upcoming"
-                ? "Set Reminder"
-                : ipo.status === "live"
-                  ? "Apply Now"
-                  : ipo.status === "closed"
-                    ? "Closed"
-                    : "View Details"}
-            </Button>
-            <Button variant="outline" size="sm">
-              <ExternalLink className="w-4 h-4" />
-            </Button>
-          </div>
+          {/* Remove extra description and actions for minimal UI */
+          }
         </CardContent>
       </Card>
     </motion.div>
